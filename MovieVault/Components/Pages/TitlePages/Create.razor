@@ -1,0 +1,89 @@
+@page "/titles/create"
+@using Microsoft.EntityFrameworkCore
+@using MovieVault.Models
+@inject IDbContextFactory<MovieVault.Data.MovieVaultContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Створення</PageTitle>
+
+<h1>Створення</h1>
+
+<h2>картки</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Title" OnValidSubmit="AddTitle" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <div class="mb-3">
+                <label for="name" class="form-label">Назва:</label> 
+                <InputText id="name" @bind-Value="Title.Name" class="form-control" /> 
+                <ValidationMessage For="() => Title.Name" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="originalname" class="form-label">Оригінальна назва:</label> 
+                <InputText id="originalname" @bind-Value="Title.OriginalName" class="form-control" /> 
+                <ValidationMessage For="() => Title.OriginalName" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="Kind" class="form-label">Тип твору</label>
+                    <InputSelect id="Kind" @bind-Value="Title.Kind" class="form-select">
+                        <option value="@TitleKind.Film">Фільм</option>
+                        <option value="@TitleKind.Series">Серіал</option>
+                    </InputSelect>
+                <ValidationMessage For="() => Title.Kind" class="text-danger" />
+            </div>     
+            <div class="mb-3">
+                <label for="releaseyear" class="form-label">Рік випуску:</label> 
+                <InputNumber id="releaseyear" @bind-Value="Title.ReleaseYear" class="form-control" /> 
+                <ValidationMessage For="() => Title.ReleaseYear" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="durationminutes" class="form-label">Тривалість (хв):</label> 
+                <InputNumber id="durationminutes" @bind-Value="Title.DurationMinutes" class="form-control" /> 
+                <ValidationMessage For="() => Title.DurationMinutes" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="seasonscount" class="form-label">Кількість сезонів:</label> 
+                <InputNumber id="seasonscount" @bind-Value="Title.SeasonsCount" class="form-control" /> 
+                <ValidationMessage For="() => Title.SeasonsCount" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="country" class="form-label">Країна:</label> 
+                <InputText id="country" @bind-Value="Title.Country" class="form-control" /> 
+                <ValidationMessage For="() => Title.Country" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="addedon" class="form-label">Дата додавання:</label> 
+                <InputDate id="addedon" @bind-Value="Title.AddedOn" class="form-control" /> 
+                <ValidationMessage For="() => Title.AddedOn" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="lastwatchedon" class="form-label">Останній перегляд:</label> 
+                <InputDate id="lastwatchedon" @bind-Value="Title.LastWatchedOn" class="form-control" /> 
+                <ValidationMessage For="() => Title.LastWatchedOn" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Створити</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/titles">Повернутися до списку</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Title Title { get; set; } = default!;
+
+    protected override void OnInitialized() => Title ??= new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddTitle()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Titles.Add(Title);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/titles");
+    }
+}

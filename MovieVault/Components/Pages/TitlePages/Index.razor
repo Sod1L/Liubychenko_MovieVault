@@ -1,0 +1,64 @@
+@page "/titles"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using MovieVault.Models
+@using MovieVault.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<MovieVault.Data.MovieVaultContext> DbFactory
+
+<PageTitle>Index</PageTitle>
+
+<h1>Каталог</h1>
+
+<p>
+    <a href="titles/create">Додати</a>
+</p>
+
+<QuickGrid Class="table" Items="@context.Titles.OrderBy(t => t.Id).Skip((CurrentPage - 1) * PageSize).Take(PageSize)">
+    <PropertyColumn Property="title => title.Name" Title="Назва" />
+    <PropertyColumn Property="title => title.OriginalName" Title="Оригінальна назва" />
+    <TemplateColumn Title="Тип твору" Context="title">
+        @(title.Kind == TitleKind.Film ? "Фільм" : "Серіал")
+    </TemplateColumn>
+    <PropertyColumn Property="title => title.ReleaseYear" Title="Рік випуску" />
+    <PropertyColumn Property="title => title.DurationMinutes" Title="Тривалість (хв)" />
+    <PropertyColumn Property="title => title.SeasonsCount" Title="Сезонів" />
+    <PropertyColumn Property="title => title.Country" Title="Країна" />
+    <PropertyColumn Property="title => title.AddedOn" Title="Дата додавання" />
+    <PropertyColumn Property="title => title.LastWatchedOn" Title="Останній перегляд" />
+    <TemplateColumn Title="Дії" Context="title">
+        <a href="@($"titles/edit?id={title.Id}")">Редагувати</a> |
+        <a href="@($"titles/details?id={title.Id}")">Деталі</a> |
+        <a href="@($"titles/delete?id={title.Id}")">Видалити</a>
+    </TemplateColumn>
+</QuickGrid>
+
+<nav class="mt-2">
+    @if (CurrentPage > 1)
+    {
+        <a class="btn btn-outline-secondary" href="@($"titles?page={CurrentPage - 1}")">Назад</a>
+    }
+    <span class="mx-2">Сторінка @CurrentPage</span>
+    @if (context.Titles.Count() > CurrentPage * PageSize)
+    {
+        <a class="btn btn-outline-secondary" href="@($"titles?page={CurrentPage + 1}")">Далі</a>
+    }
+</nav>
+
+@code {
+    private MovieVaultContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+
+    private const int PageSize = 10;
+
+    [SupplyParameterFromQuery]
+        public int? Page { get; set; }
+
+    private int CurrentPage => Page is > 0 ? Page.Value : 1;
+}
