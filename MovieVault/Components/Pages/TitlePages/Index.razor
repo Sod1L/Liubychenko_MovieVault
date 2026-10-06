@@ -21,8 +21,12 @@
         @(title.Kind == TitleKind.Film ? "Фільм" : "Серіал")
     </TemplateColumn>
     <PropertyColumn Property="title => title.ReleaseYear" Title="Рік випуску" />
-    <PropertyColumn Property="title => title.DurationMinutes" Title="Тривалість (хв)" />
-    <PropertyColumn Property="title => title.SeasonsCount" Title="Сезонів" />
+    <TemplateColumn Title="Тривалість (хв)" Context="title">
+        @(title.DurationMinutes?.ToString() ?? "—")
+    </TemplateColumn>
+    <TemplateColumn Title="Сезонів" Context="title">
+        @(title.SeasonsCount?.ToString() ?? "—")
+    </TemplateColumn>
     <PropertyColumn Property="title => title.Country" Title="Країна" />
     <PropertyColumn Property="title => title.AddedOn" Title="Дата додавання" />
     <PropertyColumn Property="title => title.LastWatchedOn" Title="Останній перегляд" />

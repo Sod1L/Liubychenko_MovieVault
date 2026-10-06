@@ -16,32 +16,11 @@
         <p><em>Loading...</em></p>
     }
     else {
-        <dl class="row">
-            <dt class="col-sm-2">Назва</dt>
-            <dd class="col-sm-10">@title.Name</dd>
-            <dt class="col-sm-2">Оригінальна назва</dt>
-            <dd class="col-sm-10">@title.OriginalName</dd>
-            <dt class="col-sm-2">Тип твору</dt>
-            <dd class="col-sm-10">
-                @(title.Kind == TitleKind.Film ? "Фільм" : "Серіал")
-            </dd>
-            <dt class="col-sm-2">Рік випуску</dt>
-            <dd class="col-sm-10">@title.ReleaseYear</dd>
-            <dt class="col-sm-2">Тривалість (хв)</dt>
-            <dd class="col-sm-10">@title.DurationMinutes</dd>
-            <dt class="col-sm-2">Кількість сезонів</dt>
-            <dd class="col-sm-10">@title.SeasonsCount</dd>
-            <dt class="col-sm-2">Країна</dt>
-            <dd class="col-sm-10">@title.Country</dd>
-            <dt class="col-sm-2">Дата додавання</dt>
-            <dd class="col-sm-10">@title.AddedOn</dd>
-            <dt class="col-sm-2">Останній перегляд</dt>
-            <dd class="col-sm-10">@title.LastWatchedOn</dd>
-        </dl>
-        <div>
-            <a href="@($"/titles/edit?id={title.Id}")">Редагувати</a> |
-            <a href="@($"/titles")">Повернутися до списку</a>
-        </div>
+            <TitleCard Item="title" Caption="Подробиці запису" />
+                <div>
+                    <a href="@($"/titles/edit?id={title.Id}")">Редагувати</a> |
+                    <a href="@($"/titles")">Повернутися до списку</a>
+                </div>
     }
 </div>
 

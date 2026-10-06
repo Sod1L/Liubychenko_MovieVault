@@ -4,75 +4,41 @@
 @inject IDbContextFactory<MovieVault.Data.MovieVaultContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>Видалити</PageTitle>
+<PageTitle>Видалити твір</PageTitle>
 
-<h1>Видалення</h1>
+<h1>Видалити твір</h1>
 
-<p>Ви впевнені що хочете видалити це?</p>
-<div>
-    <h2>Картки</h2>
+<h3>Ви впевнені, що хочете видалити цей запис?</h3>
+
+@if (title is null)
+{
+    <p><em>Завантаження...</em></p>
+}
+else
+{
+    <h4>Картки</h4>
     <hr />
-    @if (title is null)
-    {
-        <p><em>Завантаження...</em></p>
-    }
-    else {
-        <dl class="row">
-            <dt class="col-sm-2">Назва</dt>
-            <dd class="col-sm-10">@title.Name</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Оригінальна назва</dt>
-            <dd class="col-sm-10">@title.OriginalName</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Тип твору</dt>
-            <dd class="col-sm-10">
-                @(title.Kind == TitleKind.Film ? "Фільм" : "Серіал")
-        </dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Рік випуску</dt>
-            <dd class="col-sm-10">@title.ReleaseYear</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Тривалість (хв)</dt>
-            <dd class="col-sm-10">@title.DurationMinutes</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Кількість сезонів</dt>
-            <dd class="col-sm-10">@title.SeasonsCount</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Країна</dt>
-            <dd class="col-sm-10">@title.Country</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Дата додавання</dt>
-            <dd class="col-sm-10">@title.AddedOn</dd>
-        </dl>
-        <dl class="row">
-            <dt class="col-sm-2">Останній перегляд</dt>
-            <dd class="col-sm-10">@title.LastWatchedOn</dd>
-        </dl>
-        <EditForm method="post" Model="title" OnValidSubmit="DeleteTitle" FormName="delete" Enhance>
-            <button type="submit" class="btn btn-danger" disabled="@(title is null)">Видатили</button> |
-            <a href="/titles">Повернутися до списку</a>
-        </EditForm>
-    }
-</div>
+
+    <TitleCard Item="title" Caption="Запис, який буде видалено" ShowDetails="false" />
+
+    <EditForm method="post" Model="title" OnValidSubmit="DeleteTitle" FormName="delete">
+        <input type="hidden" name="Title.Id" value="@title!.Id" />
+        <button type="submit" class="btn btn-danger">Видалити</button> |
+        <a href="titles">← Назад до каталогу</a>
+    </EditForm>
+}
 
 @code {
-    private Title? title;
-
     [SupplyParameterFromQuery]
     private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private Title? title { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        title = await context.Titles.FirstOrDefaultAsync(m => m.Id == Id);
-
+        title ??= await context.Titles.FirstOrDefaultAsync(m => m.Id == Id);
         if (title is null)
         {
             NavigationManager.NotFound();
@@ -84,6 +50,6 @@
         using var context = DbFactory.CreateDbContext();
         context.Titles.Remove(title!);
         await context.SaveChangesAsync();
-        NavigationManager.NavigateTo("/titles");
+        NavigationManager.NavigateTo("titles");
     }
 }

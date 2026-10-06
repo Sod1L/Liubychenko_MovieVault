@@ -1,0 +1,53 @@
+<div class="card mb-3">
+    <div class="card-body">
+        @if (!string.IsNullOrWhiteSpace(Caption))
+        {
+            <h5 class="card-subtitle mb-2 text-muted">@Caption</h5>
+        }
+
+        <h4 class="card-title">@Item.Name</h4>
+
+        <p class="card-text">
+            @if (!string.IsNullOrWhiteSpace(Item.OriginalName))
+            {
+                <em>@Item.OriginalName</em><br />
+            }
+            <strong>@(Item.Kind == TitleKind.Film ? "Фільм" : "Серіал")</strong>
+            · @Item.ReleaseYear р.
+        </p>
+
+        @if (ShowDetails)
+        {
+            <ul class="list-unstyled mb-0">
+                @if (Item.DurationMinutes.HasValue)
+                {
+                    <li><strong>Тривалість:</strong> @Item.DurationMinutes хв</li>
+                }
+                @if (Item.SeasonsCount.HasValue)
+                {
+                    <li><strong>Сезонів:</strong> @Item.SeasonsCount</li>
+                }
+                @if (!string.IsNullOrWhiteSpace(Item.Country))
+                {
+                    <li><strong>Країна:</strong> @Item.Country</li>
+                }
+                <li><strong>Дата додавання:</strong> @Item.AddedOn.ToString("dd.MM.yyyy")</li>
+                @if (Item.LastWatchedOn.HasValue)
+                {
+                    <li><strong>Останній перегляд:</strong> @Item.LastWatchedOn.Value.ToString("dd.MM.yyyy")</li>
+                }
+            </ul>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public Title Item { get; set; } = default!;
+
+    [Parameter]
+    public string? Caption { get; set; }
+
+    [Parameter]
+    public bool ShowDetails { get; set; } = true;
+}

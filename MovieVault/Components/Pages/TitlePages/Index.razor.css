@@ -1,0 +1,33 @@
+table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;        
+}
+
+table th,
+table td {
+    padding: 0.5rem 0.75rem;
+    vertical-align: middle;
+    text-align: center;
+    border-bottom: 1px solid #dee2e6;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+table td:nth-child(1),
+table td:nth-child(2) {
+    white-space: normal;
+}
+
+table th:nth-child(10),
+table td:nth-child(10) {
+    width: 6%;
+    white-space: nowrap;
+    font-size: 0.9rem;
+}
