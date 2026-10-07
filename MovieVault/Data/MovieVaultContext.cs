@@ -10,7 +10,9 @@ public class MovieVaultContext : DbContext
     public DbSet<Title> Titles => Set<Title>();
 
     protected override void OnModelCreating(ModelBuilder b)
-    {
-        
-    }
+{
+    b.Entity<Title>()
+        .HasIndex(x => new { x.Name, x.ReleaseYear })
+        .IsUnique();
+}
 }
