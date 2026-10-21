@@ -1,0 +1,83 @@
+@page "/summary"
+@using Microsoft.EntityFrameworkCore
+@using MovieVault.Data
+@using MovieVault.Services
+@inject IDbContextFactory<MovieVaultContext> DbFactory
+
+<PageTitle>Зведення</PageTitle>
+
+<h1>Зведення</h1>
+
+@if (total.Count == 0)
+{
+    <div class="alert alert-info">
+        Записів ще немає, тому підсумовувати нема чого.
+        <a href="/titles/create">Додайте перший запис</a>.
+    </div>
+}
+else
+{
+    <h2 class="mt-4">За жанрами</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Жанр</th>
+                <th>Кількість творів</th>
+                <th>Загальна тривалість (хв)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in byGenre)
+            {
+                <tr>
+                    <td>@r.Name</td>
+                    <td>@r.Count</td>
+                    <td>@r.TotalMinutes</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr class="table-secondary fw-bold">
+                <td>@total.Name</td>
+                <td>@total.Count</td>
+                <td>@total.TotalMinutes</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <h2 class="mt-4">За періодами (місяць додавання)</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Період</th>
+                <th>Кількість творів</th>
+                <th>Загальна тривалість (хв)</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in byMonth)
+            {
+                <tr>
+                    <td>@r.Name</td>
+                    <td>@r.Count</td>
+                    <td>@r.TotalMinutes</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private List<SummaryRow> byGenre = new();
+    private List<SummaryRow> byMonth = new();
+    private SummaryRow total = new("Усього", 0, 0);
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var db = await DbFactory.CreateDbContextAsync();
+        
+        byGenre = await SummaryCalculator.ByGenreAsync(db.Titles);
+        byMonth = await SummaryCalculator.ByMonthAsync(db.Titles);
+        total = await SummaryCalculator.TotalAsync(db.Titles);
+    }
+}
