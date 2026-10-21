@@ -30,4 +30,9 @@ public class Title
     public DateOnly AddedOn { get; set; } = DateOnly.FromDateTime(DateTime.Today);
 
     public DateOnly? LastWatchedOn { get; set; }
+
+    public int GenreId { get; set; }
+    public Genre? Genre { get; set; }
+
+    public ICollection<Viewing> Viewings { get; set; } = new List<Viewing>();
 }

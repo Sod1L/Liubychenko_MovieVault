@@ -36,6 +36,10 @@
                 {
                     <li><strong>Останній перегляд:</strong> @Item.LastWatchedOn.Value.ToString("dd.MM.yyyy")</li>
                 }
+                @if (Item.Genre is not null)
+                {
+                    <li><strong>Жанр:</strong> @Item.Genre.Name</li>
+                }
             </ul>
         }
     </div>

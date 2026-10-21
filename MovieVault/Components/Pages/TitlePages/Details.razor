@@ -4,36 +4,38 @@
 @inject IDbContextFactory<MovieVault.Data.MovieVaultContext> DbFactory
 @inject NavigationManager NavigationManager
 
-<PageTitle>Деталі</PageTitle>
+<PageTitle>Подробиці твору</PageTitle>
 
-<h1>Деталі картки</h1>
+<h1>Подробиці твору</h1>
 
-<div>
-    
-    <hr />
-    @if (title is null)
-    {
-        <p><em>Loading...</em></p>
-    }
-    else {
-            <TitleCard Item="title" Caption="Подробиці запису" />
-                <div>
-                    <a href="@($"/titles/edit?id={title.Id}")">Редагувати</a> |
-                    <a href="@($"/titles")">Повернутися до списку</a>
-                </div>
-    }
-</div>
+@if (title is null)
+{
+    <p><em>Завантаження...</em></p>
+}
+else
+{
+    <TitleCard Item="title" Caption="Подробиці запису" />
+
+    <div class="mt-3">
+        <a href="@($"titles/edit?id={title.Id}")" class="btn btn-primary">Редагувати</a>
+        <a href="titles" class="btn btn-outline-secondary">← Повернутися до списку</a>
+    </div>
+}
 
 @code {
-    private Title? title;
-
     [SupplyParameterFromQuery]
     private int Id { get; set; }
+
+    private Title? title;
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        title = await context.Titles.FirstOrDefaultAsync(m => m.Id == Id);
+        
+        // ← ОСЬ ТУТ додано Include(t => t.Genre)
+        title = await context.Titles
+            .Include(t => t.Genre)
+            .FirstOrDefaultAsync(m => m.Id == Id);
 
         if (title is null)
         {

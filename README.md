@@ -31,3 +31,38 @@
 ## Запуск
 
 Інструкцію буде доповнено в наступних роботах.
+
+## Модель даних
+
+```mermaid
+classDiagram
+    class Title {
+        +int Id
+        +string Name
+        +string? OriginalName
+        +TitleKind Kind
+        +int ReleaseYear
+        +int? DurationMinutes
+        +int? SeasonsCount
+        +string? Country
+        +DateOnly AddedOn
+        +DateOnly? LastWatchedOn
+        +int GenreId
+    }
+    class Genre {
+        +int Id
+        +string Name
+        +string? Description
+    }
+    class Viewing {
+        +int Id
+        +int TitleId
+        +DateOnly WatchedAt
+        +int Rating
+        +bool IsRewatch
+        +string? Notes
+    }
+
+    Genre "1" --> "**" Title : жанр
+    Title "1" --> "**" Viewing : перегляди
+```

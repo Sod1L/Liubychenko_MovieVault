@@ -1,0 +1,98 @@
+@page "/viewings/edit"
+@using Microsoft.EntityFrameworkCore
+@using MovieVault.Models
+@inject IDbContextFactory<MovieVault.Data.MovieVaultContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Редагувати перегляд</PageTitle>
+
+<h1>Редагувати перегляд</h1>
+
+@if (Viewing is null)
+{
+    <p><em>Завантаження...</em></p>
+}
+else
+{
+    <hr />
+    <div class="row">
+        <div class="col-md-4">
+            <EditForm method="post" Model="Viewing" OnValidSubmit="UpdateViewing" FormName="edit" Enhance>
+                <DataAnnotationsValidator />
+                <ValidationSummary class="text-danger" role="alert" />
+                <input type="hidden" name="Viewing.Id" value="@Viewing.Id" />
+
+                <div class="mb-3">
+                    <label for="title" class="form-label">Твір:</label>
+                    <InputSelect id="title" @bind-Value="Viewing.TitleId" class="form-select">
+                        @foreach (var t in titles)
+                        {
+                            <option value="@t.Id">@t.Name (@t.ReleaseYear)</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => Viewing.TitleId" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="watchedat" class="form-label">Дата перегляду:</label>
+                    <InputDate id="watchedat" @bind-Value="Viewing.WatchedAt" class="form-control" />
+                    <ValidationMessage For="() => Viewing.WatchedAt" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="rating" class="form-label">Оцінка (1–10):</label>
+                    <InputNumber id="rating" @bind-Value="Viewing.Rating" class="form-control" />
+                    <ValidationMessage For="() => Viewing.Rating" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="isrewatch" class="form-label">Повторний перегляд:</label>
+                    <InputCheckbox id="isrewatch" @bind-Value="Viewing.IsRewatch" class="form-check-input" />
+                    <ValidationMessage For="() => Viewing.IsRewatch" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="notes" class="form-label">Нотатки:</label>
+                    <InputTextArea id="notes" @bind-Value="Viewing.Notes" class="form-control" rows="3" />
+                    <ValidationMessage For="() => Viewing.Notes" class="text-danger" />
+                </div>
+
+                <button type="submit" class="btn btn-primary">Зберегти</button>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<div>
+    <a href="/viewings">← Повернутися до списку</a>
+</div>
+
+@code {
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    [SupplyParameterFromForm]
+    private Viewing? Viewing { get; set; }
+
+    private List<Title> titles = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        titles = await context.Titles.OrderBy(t => t.Name).ToListAsync();
+        Viewing ??= await context.Viewings.Include(v => v.Title).FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (Viewing is null)
+        {
+            NavigationManager.NotFound();
+        }
+    }
+
+    private async Task UpdateViewing()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Attach(Viewing!).State = EntityState.Modified;
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/viewings");
+    }
+}

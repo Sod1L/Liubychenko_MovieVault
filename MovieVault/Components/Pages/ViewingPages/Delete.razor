@@ -1,0 +1,71 @@
+@page "/viewings/delete"
+@using Microsoft.EntityFrameworkCore
+@using MovieVault.Models
+@inject IDbContextFactory<MovieVault.Data.MovieVaultContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Delete</PageTitle>
+
+<h1>Delete</h1>
+
+<p>Are you sure you want to delete this?</p>
+<div>
+    <h2>Viewing</h2>
+    <hr />
+    @if (viewing is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">TitleId</dt>
+            <dd class="col-sm-10">@viewing.TitleId</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">WatchedAt</dt>
+            <dd class="col-sm-10">@viewing.WatchedAt</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Rating</dt>
+            <dd class="col-sm-10">@viewing.Rating</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">IsRewatch</dt>
+            <dd class="col-sm-10">@viewing.IsRewatch</dd>
+        </dl>
+        <dl class="row">
+            <dt class="col-sm-2">Notes</dt>
+            <dd class="col-sm-10">@viewing.Notes</dd>
+        </dl>
+        <EditForm method="post" Model="viewing" OnValidSubmit="DeleteViewing" FormName="delete" Enhance>
+            <button type="submit" class="btn btn-danger" disabled="@(viewing is null)">Delete</button> |
+            <a href="/viewings">Back to List</a>
+        </EditForm>
+    }
+</div>
+
+@code {
+    private Viewing? viewing;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        viewing = await context.Viewings.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (viewing is null)
+        {
+            NavigationManager.NotFound();
+        }
+    }
+
+    private async Task DeleteViewing()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Viewings.Remove(viewing!);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/viewings");
+    }
+}

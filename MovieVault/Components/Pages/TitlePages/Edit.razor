@@ -42,6 +42,17 @@ else
                 </div>
 
                 <div class="mb-3">
+                    <label for="genre" class="form-label">Жанр:</label>
+                    <InputSelect id="genre" @bind-Value="Title.GenreId" class="form-select">
+                        @foreach (var g in genres)
+                        {
+                            <option value="@g.Id">@g.Name</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="() => Title.GenreId" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
                     <label for="Kind" class="form-label">Тип твору</label>
                     <InputSelect id="Kind" @bind-Value="Title.Kind" class="form-select">
                         <option value="@TitleKind.Film">Фільм</option>
@@ -104,11 +115,19 @@ else
     private Title? Title { get; set; }
 
     private string? error;
+    private List<Genre> genres = new();
 
     protected override async Task OnInitializedAsync()
     {
         using var context = DbFactory.CreateDbContext();
-        Title ??= await context.Titles.FirstOrDefaultAsync(m => m.Id == Id);
+        
+        // Завантажуємо жанри для dropdown
+        genres = await context.Genres.OrderBy(g => g.Name).ToListAsync();
+        
+        // Завантажуємо твір разом із жанром
+        Title ??= await context.Titles
+            .Include(t => t.Genre)
+            .FirstOrDefaultAsync(m => m.Id == Id);
 
         if (Title is null)
         {

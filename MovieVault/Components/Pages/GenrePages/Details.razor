@@ -1,0 +1,48 @@
+@page "/genres/details"
+@using Microsoft.EntityFrameworkCore
+@using MovieVault.Models
+@inject IDbContextFactory<MovieVault.Data.MovieVaultContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Деталі жанру</PageTitle>
+
+<h1>Деталі</h1>
+
+<div>
+    <h2>Жанр</h2>
+    <hr />
+    @if (genre is null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else {
+        <dl class="row">
+            <dt class="col-sm-2">Назва</dt>
+            <dd class="col-sm-10">@genre.Name</dd>
+            <dt class="col-sm-2">Опис</dt>
+            <dd class="col-sm-10">@genre.Description</dd>
+        </dl>
+        <div>
+            <a href="@($"/genres/edit?id={genre.Id}")">Змінити</a> |
+            <a href="@($"/genres")">Повернутися до списку</a>
+        </div>
+    }
+</div>
+
+@code {
+    private Genre? genre;
+
+    [SupplyParameterFromQuery]
+    private int Id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = DbFactory.CreateDbContext();
+        genre = await context.Genres.FirstOrDefaultAsync(m => m.Id == Id);
+
+        if (genre is null)
+        {
+            NavigationManager.NotFound();
+        }
+    }
+}

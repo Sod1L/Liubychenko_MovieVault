@@ -17,6 +17,26 @@ namespace MovieVault.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.12");
 
+            modelBuilder.Entity("MovieVault.Models.Genre", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Genres");
+                });
+
             modelBuilder.Entity("MovieVault.Models.Title", b =>
                 {
                     b.Property<int>("Id")
@@ -31,6 +51,9 @@ namespace MovieVault.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("DurationMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("GenreId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Kind")
@@ -56,10 +79,68 @@ namespace MovieVault.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("GenreId");
+
                     b.HasIndex("Name", "ReleaseYear")
                         .IsUnique();
 
                     b.ToTable("Titles");
+                });
+
+            modelBuilder.Entity("MovieVault.Models.Viewing", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsRewatch")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TitleId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("WatchedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TitleId");
+
+                    b.ToTable("Viewings");
+                });
+
+            modelBuilder.Entity("MovieVault.Models.Title", b =>
+                {
+                    b.HasOne("MovieVault.Models.Genre", "Genre")
+                        .WithMany()
+                        .HasForeignKey("GenreId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Genre");
+                });
+
+            modelBuilder.Entity("MovieVault.Models.Viewing", b =>
+                {
+                    b.HasOne("MovieVault.Models.Title", "Title")
+                        .WithMany("Viewings")
+                        .HasForeignKey("TitleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Title");
+                });
+
+            modelBuilder.Entity("MovieVault.Models.Title", b =>
+                {
+                    b.Navigation("Viewings");
                 });
 #pragma warning restore 612, 618
         }

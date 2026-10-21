@@ -1,0 +1,40 @@
+@page "/viewings"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using MovieVault.Models
+@using MovieVault.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<MovieVault.Data.MovieVaultContext> DbFactory
+
+<PageTitle>Перегляди</PageTitle>
+
+<h1>Перегляди</h1>
+
+<p>
+    <a href="viewings/create">Додати перегляд</a>
+</p>
+
+<QuickGrid Class="table" Items="@context.Viewings.Include(v => v.Title)">
+    <PropertyColumn Property="viewing => viewing.Title!.Name" Title="Твір" />
+    <PropertyColumn Property="viewing => viewing.WatchedAt" Title="Дата перегляду" />
+    <PropertyColumn Property="viewing => viewing.Rating" Title="Оцінка" />
+    <PropertyColumn Property="viewing => viewing.IsRewatch" Title="Повторний" />
+    <PropertyColumn Property="viewing => viewing.Notes" Title="Нотатки" />
+
+    <TemplateColumn Title="Дії" Context="viewing">
+        <a href="@($"viewings/edit?id={viewing.Id}")">Редагувати</a> |
+        <a href="@($"viewings/details?id={viewing.Id}")">Деталі</a> |
+        <a href="@($"viewings/delete?id={viewing.Id}")">Видалити</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private MovieVaultContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}

@@ -34,6 +34,17 @@
             </div>
 
             <div class="mb-3">
+                <label for="genre" class="form-label">Жанр:</label>
+                <InputSelect id="genre" @bind-Value="Title.GenreId" class="form-select">
+                    @foreach (var g in genres)
+                    {
+                        <option value="@g.Id">@g.Name</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="() => Title.GenreId" class="text-danger" />
+            </div>
+
+            <div class="mb-3">
                 <label for="Kind" class="form-label">Тип твору</label>
                 <InputSelect id="Kind" @bind-Value="Title.Kind" class="form-select">
                     <option value="@TitleKind.Film">Фільм</option>
@@ -92,8 +103,14 @@
     private Title Title { get; set; } = default!;
 
     private string? error;
+    private List<Genre> genres = new();
 
-    protected override void OnInitialized() => Title ??= new();
+    protected override async Task OnInitializedAsync()
+    {
+        Title ??= new();
+        using var context = DbFactory.CreateDbContext();
+        genres = await context.Genres.OrderBy(g => g.Name).ToListAsync();
+    }
 
     private async Task AddTitle()
     {

@@ -1,0 +1,52 @@
+@page "/genres/create"
+@using Microsoft.EntityFrameworkCore
+@using MovieVault.Models
+@inject IDbContextFactory<MovieVault.Data.MovieVaultContext> DbFactory
+@inject NavigationManager NavigationManager
+
+<PageTitle>Додати жанр</PageTitle>
+
+<h1>Додати</h1>
+
+<h2>Жанр</h2>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <EditForm method="post" Model="Genre" OnValidSubmit="AddGenre" FormName="create" Enhance>
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" role="alert"/>
+            <div class="mb-3">
+                <span class="text-danger">*</span>
+                <label for="name" class="form-label">Назва:</label> 
+                <InputText id="name" @bind-Value="Genre.Name" class="form-control" aria-required="true"/> 
+                <ValidationMessage For="() => Genre.Name" class="text-danger" /> 
+            </div>        
+            <div class="mb-3">
+                <label for="description" class="form-label">Опис:</label> 
+                <InputText id="description" @bind-Value="Genre.Description" class="form-control" /> 
+                <ValidationMessage For="() => Genre.Description" class="text-danger" /> 
+            </div>        
+            <button type="submit" class="btn btn-primary">Створити</button>
+        </EditForm>
+    </div>
+</div>
+
+<div>
+    <a href="/genres">Повернутися до списку</a>
+</div>
+
+@code {
+    [SupplyParameterFromForm]
+    private Genre Genre { get; set; } = default!;
+
+    protected override void OnInitialized() => Genre ??= new();
+
+    // To protect from overposting attacks, see https://learn.microsoft.com/aspnet/core/blazor/forms/#mitigate-overposting-attacks.
+    private async Task AddGenre()
+    {
+        using var context = DbFactory.CreateDbContext();
+        context.Genres.Add(Genre);
+        await context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/genres");
+    }
+}

@@ -1,0 +1,37 @@
+@page "/genres"
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.QuickGrid
+@using MovieVault.Models
+@using MovieVault.Data
+@implements IAsyncDisposable
+@inject IDbContextFactory<MovieVault.Data.MovieVaultContext> DbFactory
+
+<PageTitle>Жанри</PageTitle>
+
+<h1>Жанри</h1>
+
+<p>
+    <a href="genres/create">Додати жанр</a>
+</p>
+
+<QuickGrid Class="table" Items="@context.Genres">
+    <PropertyColumn Property="genre => genre.Name" Title="Назва" />
+    <PropertyColumn Property="genre => genre.Description" Title="Опис" />
+
+    <TemplateColumn Title="Дії" Context="genre">
+        <a href="@($"genres/edit?id={genre.Id}")">Редагувати</a> |
+        <a href="@($"genres/details?id={genre.Id}")">Деталі</a> |
+        <a href="@($"genres/delete?id={genre.Id}")">Видалити</a>
+    </TemplateColumn>
+</QuickGrid>
+
+@code {
+    private MovieVaultContext context = default!;
+
+    protected override void OnInitialized()
+    {
+        context = DbFactory.CreateDbContext();
+    }
+
+    public async ValueTask DisposeAsync() => await context.DisposeAsync();
+}
