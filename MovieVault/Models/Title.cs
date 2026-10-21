@@ -35,4 +35,5 @@ public class Title
     public Genre? Genre { get; set; }
 
     public ICollection<Viewing> Viewings { get; set; } = new List<Viewing>();
+    public string NameSearch { get; set; } = "";
 }

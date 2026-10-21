@@ -122,7 +122,8 @@
 
         using var context = DbFactory.CreateDbContext();
         context.Titles.Add(Title);
-
+        Title.NameSearch = Title.Name.ToLowerInvariant();
+        
         try
         {
             await context.SaveChangesAsync();

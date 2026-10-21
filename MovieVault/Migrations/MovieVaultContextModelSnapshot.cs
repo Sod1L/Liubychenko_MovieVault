@@ -67,6 +67,10 @@ namespace MovieVault.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("NameSearch")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("OriginalName")
                         .HasMaxLength(200)
                         .HasColumnType("TEXT");

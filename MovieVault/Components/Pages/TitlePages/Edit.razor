@@ -142,10 +142,11 @@ else
             error = "Дата останнього перегляду не може бути раніше за дату додавання";
             return;
         }
-
+    
         using var context = DbFactory.CreateDbContext();
         context.Attach(Title).State = EntityState.Modified;
-
+        Title!.NameSearch = Title.Name.ToLowerInvariant();
+        
         try
         {
             await context.SaveChangesAsync();
