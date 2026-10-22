@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="MovieVault.Tests/MovieVault.Tests.csproj" />
+  <Project Path="MovieVault/MovieVault.csproj" />
+</Solution>
