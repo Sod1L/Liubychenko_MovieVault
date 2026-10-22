@@ -4,19 +4,24 @@
 @using MovieVault.Models
 @inject IDbContextFactory<MovieVault.Data.MovieVaultContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject ILogger<Delete> Logger
 
-<PageTitle>Видалити твір</PageTitle>
-
-<h1>Видалити твір «@title?.Name»</h1>
-
-<h3>Ви впевнені, що хочете видалити цей запис?</h3>
+<PageTitle>Видалення – MovieVault</PageTitle>
 
 @if (title is null)
 {
-    <p><em>Завантаження...</em></p>
+    <div class="alert alert-warning mt-3">
+        Запис не знайдено — можливо, його видалено. 
+        <a href="/titles">Повернутися до переліку</a>.
+    </div>
 }
 else
 {
+    <h1>Видалити твір «@title.Name»</h1>
+    <h3>Ви впевнені, що хочете видалити цей запис?</h3>
+    
+    <hr />
+
     <TitleCard Item="title" Caption="Запис, який буде видалено" ShowDetails="false" />
     
     <hr />
@@ -29,7 +34,7 @@ else
     <EditForm method="post" Model="title" OnValidSubmit="DeleteTitle" FormName="delete">
         <input type="hidden" name="title.Id" value="@title.Id" />
         <button type="submit" class="btn btn-danger">Видалити</button> |
-        <a href="titles">← Повернутися до списку</a>
+        <a href="/titles">← Повернутися до списку</a>
     </EditForm>
 }
 
@@ -44,34 +49,33 @@ else
     {
         using var context = DbFactory.CreateDbContext();
         
-        // ← ОСЬ ТУТ додано Include(t => t.Genre)
         title = await context.Titles
             .Include(t => t.Genre)
             .FirstOrDefaultAsync(m => m.Id == Id);
-
-        if (title is null)
-        {
-            NavigationManager.NotFound();
-        }
     }
 
     private async Task DeleteTitle()
     {
         using var context = DbFactory.CreateDbContext();
+        
+        // Зберігаємо дані для логування перед видаленням
+        int deletedId = title!.Id;
+        string deletedName = title.Name;
+
         context.Titles.Remove(title!);
 
         try
         {
             await context.SaveChangesAsync();
+            Logger.LogInformation("Видалено твір {Id}: {Name}", deletedId, deletedName);
         }
         catch (DbUpdateException ex)
             when (ex.InnerException is SqliteException { SqliteExtendedErrorCode: 787 }) 
-            // 787 = SQLITE_CONSTRAINT_FOREIGNKEY (порушення зовнішнього ключа)
         {
             error = "Неможливо видалити твір, оскільки для нього існують записи про перегляди.";
             return;
         }
 
-        NavigationManager.NavigateTo("titles");
+        NavigationManager.NavigateTo("/titles");
     }
 }

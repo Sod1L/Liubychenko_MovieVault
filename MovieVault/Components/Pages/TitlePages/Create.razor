@@ -4,8 +4,9 @@
 @using MovieVault.Models
 @inject IDbContextFactory<MovieVault.Data.MovieVaultContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject ILogger<Create> Logger
 
-<PageTitle>Створення твору</PageTitle>
+<PageTitle>Створення твору – MovieVault</PageTitle>
 
 <h1>Створити твір</h1>
 
@@ -94,7 +95,7 @@
     </div>
 </div>
 
-<div>
+<div class="mt-3">
     <a href="/titles">← Повернутися до списку</a>
 </div>
 
@@ -120,13 +121,16 @@
             return;
         }
 
+        Title.NameSearch = Title.Name.ToLowerInvariant();
+
         using var context = DbFactory.CreateDbContext();
         context.Titles.Add(Title);
-        Title.NameSearch = Title.Name.ToLowerInvariant();
-        
+
         try
         {
             await context.SaveChangesAsync();
+            
+            Logger.LogInformation("Створено твір {Id}: {Name}", Title.Id, Title.Name);
         }
         catch (DbUpdateException ex)
             when (ex.InnerException is SqliteException { SqliteExtendedErrorCode: 2067 })

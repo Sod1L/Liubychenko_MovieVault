@@ -3,6 +3,7 @@
 @using Microsoft.AspNetCore.Components.QuickGrid
 @using MovieVault.Models
 @inject IDbContextFactory<MovieVault.Data.MovieVaultContext> DbFactory
+@inject IConfiguration Config
 
 <PageTitle>Каталог – MovieVault</PageTitle>
 
@@ -94,7 +95,7 @@ else
     private List<Title> titles = new();
     private List<Genre> genres = new();
 
-    private const int PageSize = 10;
+    private int PageSize => Config.GetValue<int>("MovieVault:PageSize");
 
     [SupplyParameterFromQuery] public int? Page { get; set; }
     [SupplyParameterFromQuery] public string? Search { get; set; }

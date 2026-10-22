@@ -4,14 +4,18 @@
 @using MovieVault.Models
 @inject IDbContextFactory<MovieVault.Data.MovieVaultContext> DbFactory
 @inject NavigationManager NavigationManager
+@inject ILogger<Edit> Logger
 
-<PageTitle>Редагування твору</PageTitle>
+<PageTitle>Редагування – MovieVault</PageTitle>
 
 <h1>Редагувати твір</h1>
 
 @if (Title is null)
 {
-    <p><em>Завантаження...</em></p>
+    <div class="alert alert-warning mt-3">
+        Запис не знайдено — можливо, його видалено. 
+        <a href="/titles">Повернутися до переліку</a>.
+    </div>
 }
 else
 {
@@ -103,7 +107,7 @@ else
     </div>
 }
 
-<div>
+<div class="mt-3">
     <a href="/titles">← Повернутися до списку</a>
 </div>
 
@@ -121,18 +125,11 @@ else
     {
         using var context = DbFactory.CreateDbContext();
         
-        // Завантажуємо жанри для dropdown
         genres = await context.Genres.OrderBy(g => g.Name).ToListAsync();
         
-        // Завантажуємо твір разом із жанром
         Title ??= await context.Titles
             .Include(t => t.Genre)
             .FirstOrDefaultAsync(m => m.Id == Id);
-
-        if (Title is null)
-        {
-            NavigationManager.NotFound();
-        }
     }
 
     private async Task UpdateTitle()
@@ -142,14 +139,16 @@ else
             error = "Дата останнього перегляду не може бути раніше за дату додавання";
             return;
         }
-    
+
+        Title.NameSearch = Title.Name.ToLowerInvariant();
+
         using var context = DbFactory.CreateDbContext();
         context.Attach(Title).State = EntityState.Modified;
-        Title!.NameSearch = Title.Name.ToLowerInvariant();
-        
+
         try
         {
             await context.SaveChangesAsync();
+            Logger.LogInformation("Оновлено твір {Id}: {Name}", Title.Id, Title.Name);
         }
         catch (DbUpdateException ex)
             when (ex.InnerException is SqliteException { SqliteExtendedErrorCode: 2067 })
@@ -157,24 +156,7 @@ else
             error = "Твір із такою назвою і роком випуску вже є в каталозі";
             return;
         }
-        catch (DbUpdateConcurrencyException)
-        {
-            if (!TitleExists(Title.Id))
-            {
-                NavigationManager.NotFound();
-            }
-            else
-            {
-                throw;
-            }
-        }
 
         NavigationManager.NavigateTo("/titles?saved=true");
-    }
-
-    private bool TitleExists(int id)
-    {
-        using var context = DbFactory.CreateDbContext();
-        return context.Titles.Any(e => e.Id == id);
     }
 }

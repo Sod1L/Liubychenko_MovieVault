@@ -14,6 +14,8 @@ builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 builder.Services.AddDbContextFactory<MovieVaultContext>(o => o.UseSqlite("Data Source=movievault.db"));
 builder.Services.AddQuickGridEntityFrameworkAdapter();
 builder.Services.AddOpenApi(); // ЛР 11
+builder.Services.AddDbContextFactory<MovieVaultContext>(o => 
+    o.UseSqlite(builder.Configuration.GetConnectionString("Default")));
 
 var app = builder.Build();
 
@@ -37,6 +39,14 @@ if (app.Environment.IsDevelopment())
 // ==========================================
 // БЛОК API (МАЄ БУТИ ПЕРЕД MapRazorComponents)
 // ==========================================
+
+// Автоматичне застосування міграцій при запуску
+var factory = app.Services.GetRequiredService<IDbContextFactory<MovieVaultContext>>();
+await using (var db = await factory.CreateDbContextAsync())
+{
+    await db.Database.MigrateAsync();
+}
+
 var api = app.MapGroup("/api");
 
 api.MapGet("/titles", async Task<Ok<List<TitleDto>>> (IDbContextFactory<MovieVaultContext> f) =>
