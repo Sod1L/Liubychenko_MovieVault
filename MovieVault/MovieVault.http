@@ -1,0 +1,13 @@
+@host = http://localhost:5052
+
+### Отримати всі твори
+GET {{host}}/api/titles
+
+### Отримати один твір (існуючий)
+GET {{host}}/api/titles/1
+
+### Отримати неіснуючий твір (очікуємо 404)
+GET {{host}}/api/titles/9999
+
+### Отримати зведення
+GET {{host}}/api/summary

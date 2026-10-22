@@ -1,35 +1,79 @@
-using Microsoft.Extensions.DependencyInjection;
-using MovieVault.Components;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using MovieVault.Api;
+using MovieVault.Components;
 using MovieVault.Data;
+using MovieVault.Models;
+using MovieVault.Services;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
-builder.Services.AddDbContextFactory<MovieVaultContext>(o => o.UseSqlite("Data Source=movievault.db")
-    .LogTo(Console.WriteLine, Microsoft.Extensions.Logging.LogLevel.Information));
+// Служби
+builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+builder.Services.AddDbContextFactory<MovieVaultContext>(o => o.UseSqlite("Data Source=movievault.db"));
 builder.Services.AddQuickGridEntityFrameworkAdapter();
+builder.Services.AddOpenApi(); // ЛР 11
 
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
-    app.UseMigrationsEndPoint();
 }
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+
 app.UseHttpsRedirection();
-
 app.UseAntiforgery();
-
 app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
 
+// Документація (ЛР 11)
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
+
+// ==========================================
+// БЛОК API (МАЄ БУТИ ПЕРЕД MapRazorComponents)
+// ==========================================
+var api = app.MapGroup("/api");
+
+api.MapGet("/titles", async Task<Ok<List<TitleDto>>> (IDbContextFactory<MovieVaultContext> f) =>
+{
+    await using var db = await f.CreateDbContextAsync();
+    var data = await db.Titles
+        .Include(t => t.Genre).Include(t => t.Viewings)
+        .Select(t => new TitleDto(
+            t.Id, t.Name, t.OriginalName, t.Kind == TitleKind.Film ? "Фільм" : "Серіал",
+            t.ReleaseYear, t.Genre!.Name, t.Viewings.Count
+        )).ToListAsync();
+    return TypedResults.Ok(data);
+});
+
+api.MapGet("/titles/{id:int}", async Task<Results<Ok<TitleDto>, NotFound>> (int id, IDbContextFactory<MovieVaultContext> f) =>
+{
+    await using var db = await f.CreateDbContextAsync();
+    var title = await db.Titles
+        .Include(t => t.Genre).Include(t => t.Viewings)
+        .Where(t => t.Id == id)
+        .Select(t => new TitleDto(
+            t.Id, t.Name, t.OriginalName, t.Kind == TitleKind.Film ? "Фільм" : "Серіал",
+            t.ReleaseYear, t.Genre!.Name, t.Viewings.Count
+        )).FirstOrDefaultAsync();
+
+    return title is null ? TypedResults.NotFound() : TypedResults.Ok(title);
+});
+
+api.MapGet("/summary", async Task<Ok<List<SummaryRow>>> (IDbContextFactory<MovieVaultContext> f) =>
+{
+    await using var db = await f.CreateDbContextAsync();
+    return TypedResults.Ok(await SummaryCalculator.ByGenreAsync(db.Titles));
+});
+// ==========================================
+
+// Блок Blazor
+app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+
+// Запуск (має бути ТІЛЬКИ ОДИН раз у самому кінці)
 app.Run();
