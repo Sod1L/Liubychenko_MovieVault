@@ -66,3 +66,14 @@ classDiagram
     Genre "1" --> "**" Title : жанр
     Title "1" --> "**" Viewing : перегляди
 ```
+
+## Скріншоти
+
+### Каталог творів із пошуком
+![Каталог](docs/titles-list.png)
+
+### Форма додавання твору
+![Створення](docs/title-create.png)
+
+### Сторінка зведень
+![Зведення](docs/summary.png)

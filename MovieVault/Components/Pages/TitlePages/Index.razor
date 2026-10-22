@@ -4,15 +4,21 @@
 @using MovieVault.Models
 @inject IDbContextFactory<MovieVault.Data.MovieVaultContext> DbFactory
 
-<PageTitle>Каталог</PageTitle>
+<PageTitle>Каталог – MovieVault</PageTitle>
 
 <h1>Каталог</h1>
 
+@if (Saved)
+{
+    <div class="alert alert-success alert-dismissible fade show">
+        Запис успішно збережено!
+    </div>
+}
+
 <p>
-    <a href="titles/create" class="btn btn-success">Додати твір</a>
+    <a href="titles/create" class="btn btn-success mb-3">Додати твір</a>
 </p>
 
-<!-- ФОРМА ПОШУКУ ТА ФІЛЬТРІВ -->
 <form method="get" class="row g-2 mb-4 p-3 bg-light rounded border">
     <div class="col-md-4">
         <input name="search" value="@Search" class="form-control" placeholder="Пошук за назвою..." />
@@ -39,40 +45,50 @@
     </div>
 </form>
 
-<!-- ТАБЛИЦЯ -->
-<QuickGrid Class="table table-hover" Items="@titles.Skip((CurrentPage - 1) * PageSize).Take(PageSize).AsQueryable()">
-    <PropertyColumn Property="title => title.Name" Title="Назва" />
-    <PropertyColumn Property="title => title.OriginalName" Title="Оригінальна назва" />
-    <TemplateColumn Title="Тип твору" Context="title">
-        @(title.Kind == TitleKind.Film ? "Фільм" : "Серіал")
-    </TemplateColumn>
-    <PropertyColumn Property="title => title.Genre!.Name" Title="Жанр" />
-    <PropertyColumn Property="title => title.ReleaseYear" Title="Рік випуску" />
-    <TemplateColumn Title="Тривалість (хв)" Context="title">
-        @(title.DurationMinutes?.ToString() ?? "—")
-    </TemplateColumn>
-    <PropertyColumn Property="title => title.Country" Title="Країна" />
-    <PropertyColumn Property="title => title.AddedOn" Title="Дата додавання" />
-    <PropertyColumn Property="title => title.Viewings.Count" Title="Переглядів" />
-    <TemplateColumn Title="Дії" Context="title">
-        <a href="@($"titles/edit?id={title.Id}")">Редагувати</a> |
-        <a href="@($"titles/details?id={title.Id}")">Деталі</a> |
-        <a href="@($"titles/delete?id={title.Id}")">Видалити</a>
-    </TemplateColumn>
-</QuickGrid>
+@if (!titles.Any())
+{
+    <div class="alert alert-info">
+        Записів ще немає, або за вашим фільтром нічого не знайдено.
+        <a href="/titles/create">Додайте перший твір</a>.
+    </div>
+}
+else
+{
+    <div class="table-responsive">
+        <QuickGrid Class="table table-hover" Items="@titles.Skip((CurrentPage - 1) * PageSize).Take(PageSize).AsQueryable()">
+            <PropertyColumn Property="title => title.Name" Title="Назва" />
+            <PropertyColumn Property="title => title.OriginalName" Title="Оригінальна назва" Class="d-none d-md-table-cell" />
+            <TemplateColumn Title="Тип твору" Context="title">
+                @(title.Kind == TitleKind.Film ? "Фільм" : "Серіал")
+            </TemplateColumn>
+            <PropertyColumn Property="title => title.Genre!.Name" Title="Жанр" />
+            <PropertyColumn Property="title => title.ReleaseYear" Title="Рік випуску" />
+            <TemplateColumn Title="Тривалість (хв)" Context="title" Class="d-none d-md-table-cell">
+                @(title.DurationMinutes?.ToString() ?? "—")
+            </TemplateColumn>
+            <PropertyColumn Property="title => title.Country" Title="Країна" Class="d-none d-md-table-cell" />
+            <PropertyColumn Property="title => title.AddedOn" Title="Дата додавання" Class="d-none d-md-table-cell" />
+            <PropertyColumn Property="title => title.Viewings.Count" Title="Переглядів" />
+            <TemplateColumn Title="Дії" Context="title">
+                <a href="@($"titles/edit?id={title.Id}")">Редагувати</a> |
+                <a href="@($"titles/details?id={title.Id}")">Деталі</a> |
+                <a href="@($"titles/delete?id={title.Id}")">Видалити</a>
+            </TemplateColumn>
+        </QuickGrid>
+    </div>
 
-<!-- ПАГІНАЦІЯ -->
-<nav class="mt-3">
-    @if (CurrentPage > 1)
-    {
-        <a class="btn btn-outline-secondary" href="@($"titles?page={CurrentPage - 1}&search={Search}&genreId={GenreId}&sort={Sort}")">Назад</a>
-    }
-    <span class="mx-2">Сторінка @CurrentPage</span>
-    @if (titles.Count > CurrentPage * PageSize)
-    {
-        <a class="btn btn-outline-secondary" href="@($"titles?page={CurrentPage + 1}&search={Search}&genreId={GenreId}&sort={Sort}")">Далі</a>
-    }
-</nav>
+    <nav class="mt-3">
+        @if (CurrentPage > 1)
+        {
+            <a class="btn btn-outline-secondary" href="@($"titles?page={CurrentPage - 1}&search={Search}&genreId={GenreId}&sort={Sort}")">Назад</a>
+        }
+        <span class="mx-2">Сторінка @CurrentPage</span>
+        @if (titles.Count > CurrentPage * PageSize)
+        {
+            <a class="btn btn-outline-secondary" href="@($"titles?page={CurrentPage + 1}&search={Search}&genreId={GenreId}&sort={Sort}")">Далі</a>
+        }
+    </nav>
+}
 
 @code {
     private List<Title> titles = new();
@@ -84,6 +100,7 @@
     [SupplyParameterFromQuery] public string? Search { get; set; }
     [SupplyParameterFromQuery] public int? GenreId { get; set; }
     [SupplyParameterFromQuery] public string? Sort { get; set; }
+    [SupplyParameterFromQuery] public bool Saved { get; set; } // <-- Для повідомлення
 
     private int CurrentPage => Page is > 0 ? Page.Value : 1;
 
@@ -98,20 +115,17 @@
         
         genres = await db.Genres.OrderBy(g => g.Name).ToListAsync();
 
-        // Будуємо запит
         var query = db.Titles
             .Include(t => t.Genre)
             .Include(t => t.Viewings)
             .AsQueryable();
 
-        // Фільтр за пошуком
         if (!string.IsNullOrWhiteSpace(Search))
         {
             var s = Search.ToLowerInvariant();
             query = query.Where(t => t.NameSearch.Contains(s));
         }
 
-        // Фільтр за жанром
         if (GenreId is int gid)
         {
             query = query.Where(t => t.GenreId == gid);
@@ -122,7 +136,7 @@
             "year_desc" => query.OrderByDescending(t => t.ReleaseYear),
             "year_asc" => query.OrderBy(t => t.ReleaseYear),
             "name_desc" => query.OrderByDescending(t => t.Name),
-            _ => query.OrderBy(t => t.Name) 
+            _ => query.OrderBy(t => t.Name)
         };
 
         titles = await query.ToListAsync();

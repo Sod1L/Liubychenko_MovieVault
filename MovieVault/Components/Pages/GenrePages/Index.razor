@@ -14,6 +14,7 @@
     <a href="genres/create">Додати жанр</a>
 </p>
 
+<div class="table-responsive">
 <QuickGrid Class="table" Items="@context.Genres">
     <PropertyColumn Property="genre => genre.Name" Title="Назва" />
     <PropertyColumn Property="genre => genre.Description" Title="Опис" />
@@ -24,7 +25,7 @@
         <a href="@($"genres/delete?id={genre.Id}")">Видалити</a>
     </TemplateColumn>
 </QuickGrid>
-
+</div>
 @code {
     private MovieVaultContext context = default!;
 

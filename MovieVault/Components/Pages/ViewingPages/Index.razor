@@ -14,6 +14,7 @@
     <a href="viewings/create">Додати перегляд</a>
 </p>
 
+<div class="table-responsive">
 <QuickGrid Class="table" Items="@context.Viewings.Include(v => v.Title)">
     <PropertyColumn Property="viewing => viewing.Title!.Name" Title="Твір" />
     <PropertyColumn Property="viewing => viewing.WatchedAt" Title="Дата перегляду" />
@@ -27,6 +28,7 @@
         <a href="@($"viewings/delete?id={viewing.Id}")">Видалити</a>
     </TemplateColumn>
 </QuickGrid>
+</div>
 
 @code {
     private MovieVaultContext context = default!;
